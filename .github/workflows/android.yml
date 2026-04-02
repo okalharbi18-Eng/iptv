@@ -1,0 +1,44 @@
+name: Build Android APK
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # تحديث لأحدث إصدار مستقر لتجنب التحذيرات
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Web Project
+        run: npm run build
+
+      - name: Add Android Platform
+        run: |
+          npx cap sync android || echo "Android platform already exists"
+          npx cap sync
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21' # تحديث لإصدار Java حديث متوافق مع أندرويد 2026
+
+      - name: Build APK with Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: IPTV-App-Debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
